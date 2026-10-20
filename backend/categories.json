@@ -1,0 +1,72 @@
+[
+  [
+    "A01",
+    "Control de acceso roto",
+    "Comprobar permisos sobre cada objeto y operación.",
+    "A07",
+    "A07 verifica identidad; A01 limita qué objetos y acciones puede usar una identidad."
+  ],
+  [
+    "A02",
+    "Configuración de seguridad incorrecta",
+    "Revisar valores por defecto, servicios y endurecimiento.",
+    "A06",
+    "Una configuración insegura difiere de un control que nunca fue diseñado."
+  ],
+  [
+    "A03",
+    "Fallos en la cadena de suministro de software",
+    "Revisar inventario, origen y trazabilidad de componentes.",
+    "A08",
+    "A08 se centra en integridad; A03 en el proceso y cadena de suministro."
+  ],
+  [
+    "A04",
+    "Fallos criptográficos",
+    "Evaluar cifrado, algoritmos y gestión de claves.",
+    "A02",
+    "Precisar si la causa es criptográfica o de configuración general."
+  ],
+  [
+    "A05",
+    "Inyección",
+    "Verificar si una entrada altera instrucciones de un intérprete.",
+    "A06",
+    "Identificar la frontera entre datos e instrucciones, además del diseño general."
+  ],
+  [
+    "A06",
+    "Diseño inseguro",
+    "Examinar reglas de negocio y controles ausentes en el diseño.",
+    "A01",
+    "Distinguir la falta de una regla de negocio del incumplimiento de permisos definidos."
+  ],
+  [
+    "A07",
+    "Fallos de autenticación",
+    "Evaluar identidad, sesiones y recuperación de cuentas.",
+    "A01",
+    "Autenticación establece quién es el usuario; autorización determina sus permisos."
+  ],
+  [
+    "A08",
+    "Fallos de integridad del software o los datos",
+    "Verificar confianza e integridad antes de aceptar cambios.",
+    "A03",
+    "Distinguir la validación de una actualización del proceso completo de suministro."
+  ],
+  [
+    "A09",
+    "Fallos de registro de seguridad y alertas",
+    "Comprobar trazabilidad de operaciones y alertas accionables.",
+    "A10",
+    "Registrar el incidente no sustituye manejar de forma segura la condición excepcional."
+  ],
+  [
+    "A10",
+    "Manejo inadecuado de condiciones excepcionales",
+    "Revisar manejo seguro de errores y condiciones inesperadas.",
+    "A09",
+    "El manejo de un error y su registro son controles diferentes."
+  ]
+]

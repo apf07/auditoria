@@ -1,0 +1,12 @@
+.git
+.deps
+.venv
+**/node_modules
+frontend/dist
+data
+tmp
+output
+*.zip
+*.pdf
+*.docx
+.env*

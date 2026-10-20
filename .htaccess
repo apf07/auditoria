@@ -1,0 +1,16 @@
+Options -Indexes
+DirectoryIndex index.html
+<IfModule mod_headers.c>
+<FilesMatch "^(?:index\.html|api\.php)$">
+Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+Header always set Pragma "no-cache"
+Header always set Expires "0"
+</FilesMatch>
+</IfModule>
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^(?:backend|database|tests|data|\.deps|\.venv|\.git)(/|$) - [F,L,NC]
+</IfModule>
+<FilesMatch "\.(?:py|sql|sqlite3|md|log|toml|lock|env)$">
+Require all denied
+</FilesMatch>

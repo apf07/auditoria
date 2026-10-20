@@ -1,0 +1,16 @@
+.venv/
+.deps/
+__pycache__/
+*.pyc
+data/
+node_modules/
+frontend/dist/
+*.log
+.env
+.env.*
+!.env.example
+tmp/
+output/
+*.zip
+*.docx
+*.pdf
