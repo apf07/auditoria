@@ -15,7 +15,7 @@ La contraseña protege toda la API mediante HTTP Basic; no representa identidade
 
 ## Clever Cloud
 
-El contenedor escucha en 8080 (CC_DOCKER_EXPOSED_HTTP_PORT=8080). Sin embargo, Clever Cloud Docker no admite FS Buckets y su disco local es efímero. No publicar allí con SQLite local esperando conservar datos. Para un despliegue persistente hace falta adaptar el esquema y consultas a PostgreSQL/MySQL externo antes de usarlo. No conectar SQLite sobre FS Bucket: el proveedor advierte sobre corrupción por escrituras concurrentes.
+El contenedor escucha en 8080 (CC_DOCKER_EXPOSED_HTTP_PORT=8080). Ya admite MySQL externo mediante AUDITORIA_DB_DRIVER=mysql y MYSQL_ADDON_*. Seguir [CLEVER_CLOUD.md](CLEVER_CLOUD.md). No publicar allí con SQLite local esperando conservar datos: el disco Docker es efímero. No conectar SQLite sobre FS Bucket.
 
 Referencias: https://render.com/docs/docker · https://render.com/docs/disks · https://www.clever.cloud/developers/doc/deploy/applications/docker/ · https://www.clever.cloud/developers/doc/deploy/storage
 

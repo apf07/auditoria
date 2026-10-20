@@ -65,17 +65,14 @@ try {
         if(!is_array($input))reply(422,['detail'=>'Datos inválidos.']);
         }
     }
-    $dir=getenv('AUDITORIA_DATA_DIR')?:__DIR__.'/data';if(!is_dir($dir))mkdir($dir,0700,true);
-    $db=new PDO('sqlite:'.$dir.'/auditoria.sqlite3',null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
-    $db->exec('PRAGMA foreign_keys=ON');$db->exec('PRAGMA busy_timeout=10000');
-    $db->exec(file_get_contents(__DIR__.'/database/schema.sql'));
-    require __DIR__.'/database/migrations.php';
-    $db->beginTransaction();
-    $seed=json_decode(file_get_contents(__DIR__.'/backend/categories.json'),true,512,JSON_THROW_ON_ERROR);
-    $q=$db->prepare('INSERT OR IGNORE INTO categorias_owasp (id,nombre,criterio,categoria_cercana,contraste) VALUES (?,?,?,?,?)');
-    foreach($seed as $c)$q->execute($c);$db->commit();
+    require_once __DIR__.'/database/connection.php';
+    $db=openDatabase();
+    if(databaseDriver()==='sqlite'){
+        $db->exec(file_get_contents(__DIR__.'/database/schema.sql'));
+        require __DIR__.'/database/migrations.php';seedCatalog($db);
+    }
     $catalog=$db->query('SELECT * FROM categorias_owasp ORDER BY id')->fetchAll();
-    if($method==='GET' && $path==='/health')reply(200,['status'=>'ok','mode'=>'XAMPP PHP + SQLite, prototipo local sin autenticación']);
+    if($method==='GET' && $path==='/health')reply(200,['status'=>'ok','database'=>databaseDriver(),'mode'=>getenv('AUDITORIA_ENV')==='production'?'Prototipo privado':'Prototipo local']);
     if($method==='GET' && $path==='/categorias')reply(200,$catalog);
     if($method==='GET' && in_array($path,['/evidencias','/papelera','/exportar.csv'],true)){
         $matrixSql=file_get_contents(__DIR__.'/database/matrix.sql');

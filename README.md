@@ -1,5 +1,7 @@
 # AUDITORIA · Evidencias y clasificación
 
+Despliegue PHP + MySQL externo en Clever Cloud: consultar [docs/CLEVER_CLOUD.md](docs/CLEVER_CLOUD.md). XAMPP mantiene SQLite por defecto; la base MySQL de versiones anteriores no se importa automáticamente.
+
 Nuevo prototipo local: **FastAPI + Python + React + SQL (SQLite 3)**. Parte sin evidencias, justificaciones ni revisiones. Solo se inicializan las diez categorías OWASP 2025, necesarias para clasificar.
 
 ## Ejecutar en XAMPP (configuración principal)
