@@ -2,7 +2,7 @@ Options -Indexes
 DirectoryIndex index.php
 <IfModule mod_rewrite.c>
 RewriteEngine On
-RewriteRule ^(?:app|database|scripts|tests|storage|\.git)(/|$) - [F,L,NC]
+RewriteRule ^(?:app|database|scripts|tests|storage|deployment|\.git)(/|$) - [F,L,NC]
 </IfModule>
 <FilesMatch "^(?:config.*\.php|.*\.(?:sql|json|md|log|env))$">
 Require all denied

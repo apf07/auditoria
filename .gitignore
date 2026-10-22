@@ -4,3 +4,7 @@ config.local.php
 storage/
 tests/results/
 *.log
+*.sql.gz
+auditoria_guiada.sql
+*_backup.sql
+*_export.sql

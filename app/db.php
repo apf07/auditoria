@@ -3,7 +3,8 @@ declare(strict_types=1);
 function settings():array {
     $config=['host'=>'127.0.0.1','port'=>3306,'database'=>'auditoria_guiada','user'=>'root','password'=>''];
     if(is_file(dirname(__DIR__).'/config.local.php'))$config=array_replace($config,require dirname(__DIR__).'/config.local.php');
-    foreach(['host','port','database','user','password'] as $key){$value=getenv('AUDITORIA_DB_'.strtoupper($key));if($value!==false)$config[$key]=$value;}
+    $aliases=['host'=>['DB_HOST','MYSQL_ADDON_HOST'],'port'=>['DB_PORT','MYSQL_ADDON_PORT'],'database'=>['DB_NAME','MYSQL_ADDON_DB'],'user'=>['DB_USER','MYSQL_ADDON_USER'],'password'=>['DB_PASSWORD','MYSQL_ADDON_PASSWORD']];
+    foreach($aliases as $key=>$names){array_unshift($names,'AUDITORIA_DB_'.strtoupper($key));$configured=false;foreach($names as $name){$value=getenv($name);if($value!==false){$config[$key]=$value;$configured=true;break;}}if(getenv('AUDITORIA_ENV')==='production'&&(!$configured||$config[$key]===''))throw new RuntimeException('Falta configuración de MySQL.');}
     if(!preg_match('/^[a-zA-Z0-9_]+$/',$config['database']))throw new RuntimeException('Nombre de base inválido.');
     if(preg_match('/[;\s]/',$config['host'])||!ctype_digit((string)$config['port']))throw new RuntimeException('Configuración inválida.');
     return $config;

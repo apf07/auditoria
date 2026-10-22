@@ -1,0 +1,8 @@
+.git
+.env*
+config.local.php
+storage
+tests
+*.sql.gz
+*.zip
+*.log

@@ -2,8 +2,7 @@
 declare(strict_types=1);
 ini_set('display_errors','0');
 header('Content-Type: application/json; charset=utf-8');header('Cache-Control: no-store');header('X-Content-Type-Options: nosniff');
-session_set_cookie_params(['httponly'=>true,'samesite'=>'Strict','secure'=>!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off']);session_start();
-if(!isset($_SESSION['csrf']))$_SESSION['csrf']=bin2hex(random_bytes(32));
+require_once __DIR__.'/app/auth.php';requireLogin(true);
 function respond(int $status,$data):never {http_response_code($status);echo json_encode($data,JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE);exit;}
 function textField(array $in,string $key,int $min=1,int $max=10000):string {
     $s=$in[$key]??null;if(!is_string($s)||mb_strlen(trim($s))<$min||mb_strlen(trim($s))>$max)respond(422,['error'=>"Revisa el campo $key: entre $min y $max caracteres."]);return trim($s);
@@ -12,14 +11,14 @@ function record(PDO $db,string $table,int $id):array {$q=$db->prepare("SELECT * 
 function addRecord(PDO $db,string $table,array $data):int {$q=$db->prepare('INSERT INTO '.$table.'('.implode(',',array_keys($data)).') VALUES ('.implode(',',array_fill(0,count($data),'?')).')');$q->execute(array_values($data));return (int)$db->lastInsertId();}
 function categoryExists(PDO $db,string $category):void {$q=$db->prepare('SELECT id FROM categorias WHERE id=?');$q->execute([$category]);if(!$q->fetch())respond(422,['error'=>'Categoría OWASP inválida.']);}
 function currentTest(PDO $db,int $finding):int {$q=$db->prepare('SELECT MAX(id) FROM pruebas WHERE hallazgo_id=?');$q->execute([$finding]);return (int)$q->fetchColumn();}
-require __DIR__.'/app/db.php';
+require_once __DIR__.'/app/db.php';
 try{
     $db=database();$route=$_GET['route']??'bootstrap';$method=$_SERVER['REQUEST_METHOD'];
     if(!is_string($route))respond(400,['error'=>'Ruta inválida.']);
     if(!in_array($method,['GET','POST'],true))respond(405,['error'=>'Método no permitido.']);
     if($method==='POST'){
         if(!hash_equals($_SESSION['csrf'],$_SERVER['HTTP_X_CSRF_TOKEN']??''))respond(403,['error'=>'Sesión vencida. Recarga la página antes de guardar.']);
-        if(isset($_SERVER['HTTP_ORIGIN'])){$origin=parse_url($_SERVER['HTTP_ORIGIN']);$host=parse_url('http://'.($_SERVER['HTTP_HOST']??''));if(($origin['host']??'')!==($host['host']??'')||($origin['port']??(($origin['scheme']??'')==='https'?443:80))!==($host['port']??(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off'?443:80)))respond(403,['error'=>'Origen no permitido.']);}
+        if(isset($_SERVER['HTTP_ORIGIN'])){$origin=parse_url($_SERVER['HTTP_ORIGIN']);$host=parse_url('http://'.($_SERVER['HTTP_HOST']??''));if(($origin['host']??'')!==($host['host']??'')||($origin['port']??(($origin['scheme']??'')==='https'?443:80))!==($host['port']??(httpsRequest()?443:80)))respond(403,['error'=>'Origen no permitido.']);}
         if(stripos($_SERVER['CONTENT_TYPE']??'','application/json')!==0)respond(415,['error'=>'Se requiere JSON.']);
         $raw=file_get_contents('php://input',false,null,0,100001);if(strlen($raw)>100000)respond(413,['error'=>'Formulario demasiado grande.']);
         try{$in=json_decode($raw,true,32,JSON_THROW_ON_ERROR);}catch(Throwable $e){respond(400,['error'=>'JSON inválido.']);}

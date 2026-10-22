@@ -1,4 +1,5 @@
 <?php
+require __DIR__.'/app/auth.php';requireLogin();
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
 header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
@@ -21,7 +22,7 @@ header('Referrer-Policy: same-origin');
  <div class="environment"><i></i> XAMPP · MySQL <span>PROTOTIPO ACADÉMICO</span></div>
 </aside>
 <div class="shell">
- <header class="topbar"><div class="breadcrumb">Auditorías <span>/</span> <strong>Tienda Tecnológica</strong></div><div class="top-right"><span class="local-pill">Entorno local</span><span class="avatar" aria-label="Espacio del auditor">AU</span></div></header>
+ <header class="topbar"><div class="breadcrumb">Auditorías <span>/</span> <strong>Tienda Tecnológica</strong></div><div class="top-right"><span class="local-pill"><?= getenv('AUDITORIA_ENV')==='production'?'Acceso privado':'Entorno local' ?></span><span class="signed-user"><?= htmlspecialchars($_SESSION['display_name']??'Auditor',ENT_QUOTES,'UTF-8') ?></span><form action="logout.php" method="post" id="logout-form"><input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['csrf'],ENT_QUOTES,'UTF-8') ?>"><button class="logout-button" type="submit">Salir ↗</button></form></div></header>
  <main id="main" tabindex="-1"><div id="notice" aria-live="polite"></div><div id="view"><div class="loading"><span class="spinner"></span>Preparando tu espacio de auditoría…</div></div></main>
  <footer><span>Audita · Prototipo de apoyo a la decisión</span><span>OWASP Top 10:2025 <i>·</i> Revisión humana</span></footer>
 </div>
