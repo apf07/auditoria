@@ -1,0 +1,191 @@
+{
+  "categorias": [
+    [
+      "A01",
+      "Control de acceso roto",
+      "Se comprueba el permiso sobre cada objeto y acción, además de la identidad.",
+      "A07",
+      "A07 comprueba quién eres; A01 determina a qué datos y acciones puedes acceder."
+    ],
+    [
+      "A02",
+      "Configuración de seguridad incorrecta",
+      "Evaluar configuración, cabeceras y valores predeterminados en el contexto real.",
+      "A06",
+      "A02 trata configuración; A06 trata decisiones y reglas del diseño."
+    ],
+    [
+      "A03",
+      "Fallas en la cadena de suministro",
+      "Revisar procedencia, inventario y proceso de incorporación de componentes.",
+      "A08",
+      "A03 se centra en el ecosistema de suministro; A08 en integridad de software y datos."
+    ],
+    [
+      "A04",
+      "Fallas criptográficas",
+      "Comprobar protección criptográfica de secretos y datos sensibles.",
+      "A07",
+      "Una contraseña mal protegida puede involucrar A04; el flujo de identificación y sesión corresponde a A07."
+    ],
+    [
+      "A05",
+      "Inyección",
+      "Separar datos no confiables de instrucciones y escapar según contexto.",
+      "A01",
+      "Que una consulta use parámetros no significa que autorice al usuario sobre el objeto."
+    ],
+    [
+      "A06",
+      "Diseño inseguro",
+      "Comprobar invariantes, reglas de negocio y controles previstos por el diseño.",
+      "A02",
+      "Una regla de inventario ausente apunta a A06; un ajuste de servidor incorrecto puede apuntar a A02."
+    ],
+    [
+      "A07",
+      "Fallas de autenticación",
+      "Revisar identificación, credenciales y ciclo de vida de las sesiones.",
+      "A01",
+      "Autenticar no garantiza autorización sobre pedidos u otros objetos."
+    ],
+    [
+      "A08",
+      "Fallas de integridad de software o datos",
+      "Comprobar verificación de integridad y confianza en cambios y datos.",
+      "A03",
+      "Contrastar el defecto de integridad concreto con la cadena de suministro que lo origina."
+    ],
+    [
+      "A09",
+      "Fallas de registro y alertas de seguridad",
+      "Verificar que los eventos relevantes puedan detectarse y reconstruirse.",
+      "A10",
+      "La falta de trazabilidad es distinta de manejar incorrectamente una excepción."
+    ],
+    [
+      "A10",
+      "Manejo inadecuado de condiciones excepcionales",
+      "Evaluar respuestas y recuperación ante errores o estados imprevistos.",
+      "A02",
+      "Un mensaje técnico emitido en un catch tiene origen en el manejo del error; contrastar con configuración de diagnóstico."
+    ]
+  ],
+  "proyecto": {
+    "nombre": "Tienda Tecnológica",
+    "descripcion": "Tienda en PHP y MySQL: catálogo, carrito, pedidos y administración. Auditoría guiada del código entregado.",
+    "alcance": "Revisión del ZIP y comprobaciones manuales en una copia local con datos ficticios. No se ha auditado el despliegue ni ejecutado pruebas de explotación.",
+    "fuente": "tienda_tecnologica-main.zip",
+    "sha256": "ab2609bbeb8097fbfeecb1e8ff16f754a9c97991a2caf14ab1f082a72db6c127"
+  },
+  "hallazgos": [
+    {
+      "codigo": "H01",
+      "titulo": "Se podrían ver los datos de un pedido ajeno",
+      "prioridad": "alta",
+      "categoria_id": "A01",
+      "activo": "Datos personales de compradores",
+      "perfil": "Visitante sin autenticar",
+      "ubicacion": "rastrear.php:9–29 y 192–196; pedido_exitoso.php:5–32 y 208–212",
+      "evidencia": "La tienda busca el pedido usando el número escrito en la dirección de la página. Antes de mostrar los datos, el código no comprueba que quien lo consulta sea su comprador. Las páginas muestran nombre, correo y dirección; la confirmación también muestra el teléfono.",
+      "codigo_fuente": "9: if (isset($_GET['id_pedido'])) {\n10:     $id_pedido = intval($_GET['id_pedido']);\n11:     \n12:     if ($id_pedido > 0) {\n13:         try {\n14:             // Buscar la información principal del pedido y del cliente\n15:             $stmtPedido = $conexion->prepare(\"SELECT p.*, c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.correo, c.telefono, c.direccion \n16:                                                FROM pedidos p \n17:                                                INNER JOIN clientes c ON p.id_cliente = c.id_cliente \n18:                                                WHERE p.id_pedido = :id LIMIT 1\");\n19:             $stmtPedido->execute(['id' => $id_pedido]);\n20:             $pedido = $stmtPedido->fetch(PDO::FETCH_ASSOC);\n21: \n22:             if ($pedido) {\n23:                 // Obtener los productos asociados a este pedido\n24:                 $stmtDetalles = $conexion->prepare(\"SELECT dp.*, pr.nombre AS producto_nombre, pr.codigo \n25:                                                   FROM detalle_pedidos dp \n26:                                                   INNER JOIN productos pr ON dp.id_producto = pr.id_producto \n27:                                                   WHERE dp.id_pedido = :id\");\n28:                 $stmtDetalles->execute(['id' => $id_pedido]);\n29:                 $detalles = $stmtDetalles->fetchAll(PDO::FETCH_ASSOC);",
+      "impacto": "Una persona que conozca o adivine un número de pedido podría consultar datos personales de otro comprador. Esta posibilidad se observa en el código, pero falta comprobarla en una copia del sistema.",
+      "recomendacion": "Antes de mostrar un pedido, comprobar en el servidor que pertenece a la persona que lo solicita. Si se compra sin cuenta, entregar un enlace privado con un código largo y aleatorio, y mostrar solo los datos necesarios.",
+      "pasos": "1. Prepara una copia local con dos pedidos ficticios: uno de Ana y otro de Luis.\n2. Abre una ventana privada, sin iniciar sesión.\n3. Abre rastrear.php?id_pedido=N usando únicamente el número de uno de esos pedidos de prueba.\n4. Repite con pedido_exitoso.php?id=N y el mismo pedido ficticio.\n5. Anota si puedes ver nombre, correo, teléfono o dirección sin acreditar que eres el comprador.",
+      "esperado": "Una persona sin permiso no puede consultar datos del pedido. El sistema pide acreditar la titularidad o presentar un enlace privado válido.",
+      "referencia_asvs": "ASVS 5.0 · revisar controles de autorización sobre objetos; identificación exacta pendiente de contrastar.",
+      "referencia_wstg": "WSTG · pruebas de referencias directas a objetos (IDOR).",
+      "origen": "revision_zip"
+    },
+    {
+      "codigo": "H02",
+      "titulo": "Un enlace puede borrar datos con la sesión del administrador",
+      "prioridad": "alta",
+      "categoria_id": "A01",
+      "activo": "Categorías, marcas y productos",
+      "perfil": "Administrador con sesión activa",
+      "ubicacion": "admin/categorias/eliminar.php:2–11; admin/marcas/eliminar.php:2–10; admin/productos/eliminar.php:2–33",
+      "evidencia": "Las opciones de eliminar categorías, marcas y productos aceptan el número del registro en un enlace. El código comprueba que haya una sesión de administrador, pero no solicita una confirmación de seguridad en el servidor que vincule la acción con su formulario original.",
+      "codigo_fuente": "1: <?php\n2: require_once '../../includes/verificar_admin.php';\n3: require_once '../../config/conexion.php';\n4: \n5: $id = isset($_GET['id']) ? intval($_GET['id']) : 0;\n6: \n7: if ($id > 0) {\n8:     try {\n9:         // Intentar eliminar la categoría\n10:         $stmt = $conexion->prepare(\"DELETE FROM categorias WHERE id_categoria = :id\");\n11:         $stmt->execute(['id' => $id]);\n12:         \n13:         header('Location: listar.php?msg=Categoría eliminada correctamente.');\n14:         exit();",
+      "impacto": "Un administrador podría abrir un enlace y borrar un registro sin haber querido hacerlo. Para provocar esto desde otra página también deben darse ciertas condiciones de cookies y navegador; esa parte aún no se ha comprobado.",
+      "recomendacion": "Los enlaces de consulta no deben borrar datos. Usar una solicitud POST y un código de seguridad CSRF que el servidor compruebe antes de eliminar. Una ventana que pregunta «¿Estás seguro?» no sustituye esta comprobación.",
+      "pasos": "1. En la copia local crea una categoría llamada PRUEBA, sin productos asociados.\n2. Inicia sesión con una cuenta administrativa de prueba.\n3. Identifica el enlace que utiliza la tienda para eliminar esa categoría.\n4. Abre ese enlace únicamente para el registro ficticio.\n5. Comprueba si se elimina sin enviar un formulario con un código de seguridad. No pruebes con datos reales.",
+      "esperado": "Abrir un enlace no borra registros. El servidor rechaza una eliminación que no utiliza el método y el código de seguridad correctos.",
+      "referencia_asvs": "ASVS 5.0 · revisar controles contra solicitudes falsificadas.",
+      "referencia_wstg": "WSTG · comprobación de CSRF.",
+      "origen": "revision_zip"
+    },
+    {
+      "codigo": "H03",
+      "titulo": "Reactivar un pedido podría dejar productos con stock negativo",
+      "prioridad": "alta",
+      "categoria_id": "A06",
+      "activo": "Integridad del inventario",
+      "perfil": "Administrador",
+      "ubicacion": "admin/pedidos/cambiar_estado.php:17–55; database/tienda_tecnologica.sql:54",
+      "evidencia": "Al cancelar un pedido, la tienda devuelve sus unidades al inventario. Si el administrador lo reactiva, vuelve a descontarlas, pero el código no comprueba antes que todavía existan unidades suficientes.",
+      "codigo_fuente": "43:             // 3. Si el pedido estaba \"Cancelado\" y ahora se reactiva a otro estado, descontar stock nuevamente\n44:             if ($estadoAnterior === 'Cancelado' && $nuevo_estado !== 'Cancelado') {\n45:                 $stmtDetalles = $conexion->prepare(\"SELECT id_producto, cantidad FROM detalle_pedidos WHERE id_pedido = :id\");\n46:                 $stmtDetalles->execute(['id' => $id_pedido]);\n47:                 $detalles = $stmtDetalles->fetchAll();\n48: \n49:                 $stmtQuitarStock = $conexion->prepare(\"UPDATE productos SET stock = stock - :cantidad WHERE id_producto = :id_producto\");\n50: \n51:                 foreach ($detalles as $item) {\n52:                     $stmtQuitarStock->execute([\n53:                         'cantidad' => $item['cantidad'],\n54:                         'id_producto' => $item['id_producto']\n55:                     ]);\n56:                 }\n57:             }",
+      "impacto": "El inventario podría quedar por debajo de cero y el negocio aceptar pedidos que no puede atender. La prioridad es preliminar: falta comprobar el comportamiento real con un pedido ficticio.",
+      "recomendacion": "Antes de reactivar el pedido, comprobar todas sus cantidades y rechazar el cambio si falta stock. Hacer la comprobación y el descuento juntos dentro de una transacción para que dos operaciones no usen las mismas unidades.",
+      "pasos": "1. En la copia local prepara un pedido ficticio de 2 unidades de un producto.\n2. Cancela ese pedido para devolver sus unidades.\n3. En ese producto de prueba deja el stock en 0.\n4. Desde el panel intenta cambiar el pedido de Cancelado a Confirmado.\n5. Consulta el stock y el estado del pedido. Anota los valores antes y después.",
+      "esperado": "La tienda rechaza la reactivación porque no hay unidades disponibles. El stock permanece en 0 y el pedido sigue cancelado.",
+      "referencia_asvs": "ASVS 5.0 · revisar reglas de negocio y validación de invariantes.",
+      "referencia_wstg": "WSTG · pruebas de lógica de negocio y límites de uso.",
+      "origen": "revision_zip"
+    },
+    {
+      "codigo": "H04",
+      "titulo": "Al entrar como administrador no cambia el código de sesión",
+      "prioridad": "media",
+      "categoria_id": "A07",
+      "activo": "Sesión del panel administrativo",
+      "perfil": "Usuario que inicia sesión",
+      "ubicacion": "login.php:2 y 20–26",
+      "evidencia": "El servidor utiliza un identificador de sesión para reconocer al navegador. Cuando el login acepta la contraseña, el código conserva ese identificador en vez de generar uno nuevo para la sesión administrativa.",
+      "codigo_fuente": "15:     try {\n16:         $stmt = $conexion->prepare(\"SELECT * FROM usuarios WHERE correo = :correo AND rol = 'administrador' AND estado = 1 LIMIT 1\");\n17:         $stmt->execute(['correo' => $correo]);\n18:         $usuario = $stmt->fetch();\n19: \n20:         if ($usuario && password_verify($password, $usuario['password'])) {\n21:             $_SESSION['id_usuario'] = $usuario['id_usuario'];\n22:             $_SESSION['nombre'] = $usuario['nombre'];\n23:             $_SESSION['correo'] = $usuario['correo'];\n24:             $_SESSION['rol'] = $usuario['rol'];\n25: \n26:             header('Location: admin/dashboard.php');\n27:             exit();",
+      "impacto": "Si otra persona hubiera conseguido conocer o fijar el identificador anterior, conservarlo podría facilitar el uso indebido de la sesión. Este hallazgo no significa que ya se haya robado una cuenta.",
+      "recomendacion": "Generar un identificador nuevo al iniciar sesión correctamente e invalidar el anterior. Revisar también cuándo caduca la sesión y cómo se protege su cookie.",
+      "pasos": "1. Abre una copia local y las herramientas de desarrollador del navegador.\n2. Busca la cookie de sesión en Aplicación o Almacenamiento. Anota de forma privada su identificador antes del login.\n3. Inicia sesión con una cuenta administrativa ficticia autorizada.\n4. Compara el identificador después de entrar.\n5. En tu respuesta escribe solo si cambió o no cambió. No pegues el valor de la cookie.",
+      "esperado": "El identificador de sesión cambia al iniciar sesión correctamente. La comprobación de que el identificador anterior queda invalidado requiere una verificación adicional.",
+      "referencia_asvs": "ASVS 5.0 · revisar renovación y ciclo de vida de sesiones.",
+      "referencia_wstg": "WSTG · comprobación de fijación de sesión.",
+      "origen": "revision_zip"
+    },
+    {
+      "codigo": "H05",
+      "titulo": "Si falla MySQL, la página podría mostrar detalles del servidor",
+      "prioridad": "media",
+      "categoria_id": "A10",
+      "activo": "Información técnica del servidor",
+      "perfil": "Visitante ante un fallo de base",
+      "ubicacion": "config/conexion.php:22–24",
+      "evidencia": "Cuando falla la conexión a la base de datos, el código muestra directamente el mensaje técnico de MySQL en la página. Ese mensaje no está pensado para los visitantes.",
+      "codigo_fuente": "22: } catch (PDOException $e) {\n23:     // Si falla la conexión, detener la ejecución y mostrar un mensaje limpio\n24:     die(\"Error de conexión a la base de datos: \" . $e->getMessage());\n25: }",
+      "impacto": "Según el error, se podrían revelar nombres del servidor, de la base o del usuario de conexión. No se ha demostrado que se exponga una contraseña.",
+      "recomendacion": "Mostrar al visitante un mensaje sencillo, por ejemplo «Servicio temporalmente no disponible». Guardar el detalle técnico en un registro privado del servidor, sin contraseñas.",
+      "pasos": "1. Trabaja exclusivamente en una copia local con datos ficticios.\n2. Guarda una copia de la configuración de conexión.\n3. Cambia temporalmente el nombre de la base por uno inexistente y abre una página de la tienda.\n4. Anota si se muestra un aviso general o información técnica. Oculta datos de conexión en cualquier captura.\n5. Restaura la configuración original al terminar.",
+      "esperado": "El visitante recibe un aviso general, sin nombres de servidor, usuario o base de datos. El detalle del fallo queda solo en un registro privado.",
+      "referencia_asvs": "ASVS 5.0 · revisar manejo de errores y protección de información.",
+      "referencia_wstg": "WSTG · pruebas de manejo de errores.",
+      "origen": "revision_zip"
+    },
+    {
+      "codigo": "H06",
+      "titulo": "Se podría subir un archivo que no es una imagen",
+      "prioridad": "media",
+      "categoria_id": "A06",
+      "activo": "Archivos de imágenes de productos",
+      "perfil": "Administrador",
+      "ubicacion": "admin/productos/agregar.php:29–47; admin/productos/editar.php:37–50",
+      "evidencia": "Para aceptar la imagen de un producto, la tienda comprueba que el nombre termine en .jpg, .jpeg, .png o .webp. No comprueba que el contenido del archivo sea realmente una imagen.",
+      "codigo_fuente": "29:         // Procesar subida de imagen si se adjuntó una\n30:         if (isset($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {\n31:             $fileTmpPath = $_FILES['imagen']['tmp_name'];\n32:             $fileName = $_FILES['imagen']['name'];\n33:             $fileExtension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));\n34:             \n35:             $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];\n36:             if (in_array($fileExtension, $allowedExtensions)) {\n37:                 $uploadFileDir = '../../uploads/productos/';\n38:                 if (!is_dir($uploadFileDir)) {\n39:                     mkdir($uploadFileDir, 0755, true);\n40:                 }\n41:                 \n42:                 // Generar un nombre único para evitar colisiones\n43:                 $newFileName = md5(time() . $fileName) . '.' . $fileExtension;\n44:                 $dest_path = $uploadFileDir . $newFileName;\n45: \n46:                 if (move_uploaded_file($fileTmpPath, $dest_path)) {\n47:                     $imagen_nombre = $newFileName;\n48:                 }\n49:             }",
+      "impacto": "Un administrador podría guardar archivos inesperados en la carpeta de imágenes. Esto no demuestra que se pueda ejecutar código o atacar a otros usuarios: depende de otros controles del servidor.",
+      "recomendacion": "Comprobar que una biblioteca de imágenes pueda abrir y volver a guardar el archivo. Limitar tamaño y dimensiones y evitar que se ejecute código dentro de la carpeta de imágenes.",
+      "pasos": "1. En la copia local crea un archivo de texto con el contenido inocuo «archivo de prueba».\n2. Cámbiale el nombre a prueba.jpg; no incluyas código ejecutable.\n3. Con una cuenta administrativa ficticia, intenta usarlo como imagen de un producto de prueba.\n4. Comprueba si se rechaza por no ser una imagen o si se guarda.\n5. Retira el archivo y el producto de prueba al terminar.",
+      "esperado": "La tienda rechaza el archivo porque su contenido no es una imagen válida, aunque su nombre termine en .jpg.",
+      "referencia_asvs": "ASVS 5.0 · revisar validación y almacenamiento de archivos.",
+      "referencia_wstg": "WSTG · comprobación de tipos de archivos inesperados.",
+      "origen": "revision_zip"
+    }
+  ]
+}
