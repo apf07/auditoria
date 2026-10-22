@@ -1,0 +1,6 @@
+'use strict';
+document.querySelectorAll('[data-password]').forEach(button=>button.addEventListener('click',()=>{const input=document.getElementById(button.dataset.password);const visible=input.type==='password';input.type=visible?'text':'password';button.textContent=visible?'Ocultar':'Mostrar';button.setAttribute('aria-label',visible?'Ocultar contraseña':'Mostrar contraseña');button.setAttribute('aria-pressed',String(visible));}));
+const form=document.getElementById('access-form'),password=document.getElementById('access-password'),confirmPassword=document.getElementById('confirm-password');
+if(confirmPassword){const check=()=>confirmPassword.setCustomValidity(confirmPassword.value!==password.value?'Las contraseñas deben coincidir.':'');confirmPassword.addEventListener('input',check);password.addEventListener('input',check);}
+if(form)form.addEventListener('submit',()=>{const button=form.querySelector('[type="submit"]');button.disabled=true;button.textContent='Un momento…';});
+window.addEventListener('pageshow',()=>{const button=form?.querySelector('[type="submit"]');if(button){button.disabled=false;button.textContent=confirmPassword?'Crear mi cuenta de auditor →':'Entrar a mi auditoría →';}});

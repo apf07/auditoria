@@ -6,6 +6,7 @@ try{
     $c=settings();if(getenv('AUDITORIA_ENV')!=='production'){$server=database(true);$server->exec('CREATE DATABASE IF NOT EXISTS `'.$c['database'].'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');}
     $db=database();
     foreach(explode(';',file_get_contents(dirname(__DIR__).'/database/schema.sql')) as $sql)if(trim($sql)!=='')$db->exec($sql);
+    require dirname(__DIR__).'/database/migrate.php';
     $seed=json_decode(file_get_contents(dirname(__DIR__).'/database/seed.json'),true,512,JSON_THROW_ON_ERROR);
     $db->beginTransaction();
     $q=$db->prepare('INSERT INTO categorias(id,nombre,criterio,cercana,contraste) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE id=VALUES(id)');

@@ -9,6 +9,14 @@ if(($in['action']??'')==='create'){
     $q=$db->prepare('INSERT INTO usuarios(username,display_name,password_hash) VALUES (?,?,?)');$q->execute([$username,'Cuenta temporal de prueba',password_hash($in['password'],PASSWORD_DEFAULT)]);
     echo "OK";
 }elseif(($in['action']??'')==='cleanup'){
+    $q=$db->prepare('SELECT id FROM usuarios WHERE username=? AND display_name=?');$q->execute([$username,'Cuenta temporal de prueba']);$id=$q->fetchColumn();
+    if($id){
+        $db->beginTransaction();
+        $q=$db->prepare('DELETE FROM revisiones WHERE usuario_id=? OR prueba_id IN (SELECT id FROM pruebas WHERE usuario_id=?)');$q->execute([$id,$id]);
+        $q=$db->prepare('DELETE FROM pruebas WHERE usuario_id=?');$q->execute([$id]);
+        $q=$db->prepare('DELETE FROM hallazgos WHERE usuario_id=? AND titulo=?');$q->execute([$id,$username]);
+        $db->commit();
+    }
     $q=$db->prepare('DELETE FROM usuarios WHERE username=? AND display_name=?');$q->execute([$username,'Cuenta temporal de prueba']);
     $q=$db->prepare('DELETE FROM login_intentos WHERE clave=?');$q->execute([hash('sha256',mb_strtolower($username))]);
 }
